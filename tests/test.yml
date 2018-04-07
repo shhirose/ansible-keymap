@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  become: yes
+  roles:
+    - ../ansible-keymap
+  vars:
+    shhirose_keymap_keytable: 'jp106'
+    shhirose_keymap_model: 'jp106'
+    shhirose_keymap_layout: 'jp'

@@ -1,0 +1,47 @@
+---
+- name: Check installed SELinux
+  yum:
+    list: selinux-policy
+  register: selinux_installed
+
+- name: Install libselinux-python
+  yum:
+    name: libselinux-python
+    state: present
+  when: selinux_installed.results | length > 0
+
+- name: Check current timezone for RHEL v6
+  shell: "cat {{ shhirose_keymap_config_file }} | grep {{ shhirose_keymap_keytable }} | wc -l"
+  register: current
+  changed_when: False
+  ignore_errors: yes
+  when: ansible_distribution_major_version | int == 6
+
+- name: Apply keymap for RHEL v6
+  lineinfile:
+    dest: "{{ shhirose_keymap_config_file }}"
+    state: present
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - regexp: "^KEYTABLE="
+      line: "KEYTABLE=\"{{ shhirose_keymap_keytable }}\""
+    - regexp: "^MODEL="
+      line: "MODEL=\"{{ shhirose_keymap_model }}\""
+    - regexp: "^LAYOUT="
+      line: "LAYOUT=\"{{ shhirose_keymap_layout }}\""
+    - regexp: "^KEYBOARDTYPE="
+      line: "KEYBOARDTYPE=\"{{ shhirose_keymap_keyboardtype }}\""
+  when: ansible_distribution_major_version | int == 6 and current.stdout == "0"
+
+- name: Check current timezone for RHEL v7 or lator
+  shell: "localectl status | grep \"VC Keymap: {{ shhirose_keymap_layout }}\" | wc -l"
+  register: current
+  ignore_errors: yes
+  changed_when: False
+  when: ansible_distribution_major_version | int >= 7
+
+- name: Apply keymap for RHEL v7 or lator
+  shell: "localectl set-keymap {{ shhirose_keymap_keytable }}"
+  change_when: False
+  when: ansible_distribution_major_version | int >= 7 and current.stdout == "0"
