@@ -43,5 +43,5 @@
 
 - name: Apply keymap for RHEL v7 or lator
   shell: "localectl set-keymap {{ shhirose_keymap_keytable }}"
-  change_when: False
+  changed_when: False
   when: ansible_distribution_major_version | int >= 7 and current.stdout == "0"
